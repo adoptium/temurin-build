@@ -1,0 +1,53 @@
+# ********************************************************************************
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
+# The number of CA certs generated from security/certdata.txt depends on the
+# current date, as certs with an expired CKA_NSS_SERVER_DISTRUST_AFTER are
+# excluded. This check therefore runs on every PR, on every push and daily,
+# and fails if EXPECTED_COUNT in VerifyCACertsTest.java is out of date.
+
+name: CA Certs Count Check
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+  schedule:
+    # https://crontab.guru/#30_0_*_*_*
+    - cron: "30 0 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  check_expected_count:
+    if: startsWith(github.repository, 'adoptium/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Regenerate CA bundle from local certdata.txt
+        working-directory: ./security
+        # -n: use the checked in certdata.txt, do not download.
+        # mk-ca-bundle.pl rewrites EXPECTED_COUNT in VerifyCACertsTest.java.
+        run: ./mk-ca-bundle.pl -n -q ca-bundle.crt
+
+      - name: Verify EXPECTED_COUNT is up to date
+        run: |
+          if ! git diff --exit-code -- test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java; then
+            echo "::error file=test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java::EXPECTED_COUNT is out of date. Run 'cd security && ./mk-ca-bundle.pl -n -f ca-bundle.crt' and commit the change."
+            exit 1
+          fi
