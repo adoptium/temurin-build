@@ -22,54 +22,117 @@ permissions:
   contents: write  # to push the ca-certs-updater branch
   pull-requests: write  # to create a PR
 
+# Never run two updates at once, they would race on the ca-certs-updater branch.
+concurrency:
+  group: ca-cert-updater
+  cancel-in-progress: false
+
 jobs:
   update_ca_certs:
     if: startsWith(github.repository, 'adoptium/')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      UPDATER_BRANCH: ca-certs-updater
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
+      # Always build from the default branch, even for a manual workflow_dispatch
+      # run selected from another ref, so that no unrelated history can ever be
+      # pushed to the updater branch / PR.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
+      # The branch is only touched after this step succeeds, so a failed download
+      # leaves any existing update branch and open PR intact.
       - name: Run updater
         working-directory: ./security
         run: "./mk-ca-bundle.pl -d nss-latest-rtm"
 
-      # Build the cert-update commit directly on top of the checked-out default branch
-      # and publish only that final state. The branch is never pushed in an intermediate
-      # state identical to the default branch (an empty PR diff makes GitHub close the PR).
-      # Force-pushing the rebuilt branch keeps any open PR open and up to date, so it
-      # cannot drift from the default branch and revert newer changes.
-      - name: Commit and publish ca-certs-updater branch
-        id: publish
+      # Only tracked files may change (certdata.txt and EXPECTED_COUNT in VerifyCACertsTest.java),
+      # an unexpected change elsewhere indicates a problem and must not be published.
+      - name: Detect certificate changes
+        id: detect
+        run: |
+          unexpected="$(git status --porcelain | grep -v -E ' (security/certdata\.txt|test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest\.java)$' || true)"
+          if [ -n "$unexpected" ]; then
+            echo "::error::Unexpected changes after running the updater:"
+            echo "$unexpected"
+            exit 1
+          fi
+          if git diff --quiet; then
+            echo "No certificate changes"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # gr2m/create-or-update-pull-request-action never rebases an existing remote branch
+      # onto the default branch, it cherry-picks the new commit onto the (possibly stale)
+      # remote branch, which is what caused the original regression.
+      # So first force the remote branch to its final state: default branch + the cert update,
+      # committed locally and published in one push. The branch is never pushed in an
+      # intermediate state identical to the default branch (an empty PR diff makes GitHub
+      # close the PR). The local commit is then undone so the action still sees the changes;
+      # its cherry-pick onto the already up to date branch is empty, which it skips.
+      - name: Reset ca-certs-updater branch to default branch + cert update
+        if: steps.detect.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         run: |
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "No certificate changes"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git add .
+          git add -u
           git -c user.name="eclipse-temurin-bot" -c user.email="temurin-bot@eclipse.org" \
             commit --author="eclipse-temurin-bot <temurin-bot@eclipse.org>" \
             -m "cacerts: pull in updated certs from Mozilla"
           git push --force \
             "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            HEAD:refs/heads/ca-certs-updater
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+            "HEAD:refs/heads/${UPDATER_BRANCH}"
+          git reset --mixed HEAD~1
+          git status --short
 
-      - name: Create PR if none is open
-        if: steps.publish.outputs.changed == 'true'
+      # The action finds an existing PR via the (eventually consistent) search API and tries
+      # to create a duplicate, failing with a 422, if the search misses it. Check explicitly
+      # with the pulls API instead: the branch was already force-pushed above, so an open
+      # PR is up to date without running the action.
+      - name: Check for existing open PR
+        id: existing_pr
+        if: steps.detect.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
-          BASE_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          if [ -n "$(gh pr list --repo "$GITHUB_REPOSITORY" --head ca-certs-updater --state open --json number --jq '.[].number')" ]; then
-            echo "Open PR already exists; branch updated"
-            exit 0
+          existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$UPDATER_BRANCH" --base "$BASE_BRANCH" --state open --json number --jq '.[].number')"
+          if [ -n "$existing" ]; then
+            echo "Open PR #${existing} already exists and was updated by the branch push"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-          gh pr create --repo "$GITHUB_REPOSITORY" \
-            --head ca-certs-updater --base "$BASE_BRANCH" \
-            --title "Update CA Certs" \
-            --body "See details in the Meta Bug linked from the *Root Cert Inclusions into Mozilla Product Releases* section of https://wiki.mozilla.org/NSS:Release_Versions"
+
+      - name: Create PR
+        if: steps.detect.outputs.changed == 'true' && steps.existing_pr.outputs.exists == 'false'
+        uses: gr2m/create-or-update-pull-request-action@b65137ca591da0b9f43bad7b24df13050ea45d1b # v1.10.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
+        with:
+          branch: ca-certs-updater
+          title: "Update CA Certs"
+          body: "See details in the Meta Bug linked from the *Root Cert Inclusions into Mozilla Product Releases* section of https://wiki.mozilla.org/NSS:Release_Versions"
+          commit-message: "cacerts: pull in updated certs from Mozilla"
+          author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
+
+      # The default branch already has the latest certs: any existing update PR/branch is
+      # obsolete (already merged, or stale/regressing), so close it and remove the branch.
+      - name: Clean up obsolete update PR and branch
+        if: steps.detect.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
+        run: |
+          for pr in $(gh pr list --repo "$GITHUB_REPOSITORY" --head "$UPDATER_BRANCH" --state open --json number --jq '.[].number'); do
+            gh pr close "$pr" --repo "$GITHUB_REPOSITORY" \
+              --comment "Closing: ${BASE_BRANCH} already contains the latest CA certs, this update is obsolete."
+          done
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" "$UPDATER_BRANCH" > /dev/null; then
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              --delete "refs/heads/${UPDATER_BRANCH}"
+          fi
